@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>I Like Turtles</title>
+		<script
+		src="https://code.jquery.com/jquery-3.2.1.min.js"
+		integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+		crossorigin="anonymous">
+		</script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="./style.css">
+	</head>
+<body>
+<!-- turtle template for turtle to be populated -->
+	<div id="turtleTemplate" style="display: none">
+		<div class="col-md-3">
+			<div class="turtle">
+				<a href="" class="turtle_link"><h3 class="turtle_name"></h3></a>
+				<p class="turtle_weapon"></p>
+				<button class="turtle_pizza">Buy 🍕</button>
+				<div class= "pizza_count"></div>
+				<button class="delete_turtle btn btn-warning">Delete 🐢</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="container login-form" style="display: none">
+		<div class="row">
+			<div class="col-sm-4 col-sm-offset-4">
+				<div id="login-error"></div>
+				<input type="text" id="username">
+				<input type="text" id="password">
+				<button class="btn btn-info" id="login">Login</button>
+				<button class="btn btn-warning" id="register">Register</button>
+			</div>
+		</div>
+	</div>
+<!-- containers built for each turtle as needed -->
+	<div class="container">
+		<div class="turtles">
+			<div id="output" class= "row">
+			</div>
+		</div>
+	</div>
+<!-- to input a new turtle-->
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-4 col-sm-offset-4">
+				Turtle Name: <input type="text" id="newTurtleName" class="form-control">
+				Turtle Color: <input type="text" id="newTurtleColor" class="form-control">
+				Turtle Weapon: <input type="text" id="newTurtleWeapon" class="form-control">
+				<button class="btn btn-info" id="newTurtleSubmit">Submit Turtle</button>
+			</div>
+		</div>
+	</div>
+	<script>
+
+		function getTurtles() {
+// get request to get the turtles.. using ajax to handle err state
+			$.ajax({
+				method: "GET",
+				url: '/api/turtles',
+				success: function(response){
+/*  when we get a response, clear out all of the turtle divs and rebuild as clones from template
+*/
+					$('#output').empty();
+					for (var i = 0; i < response.length; i++) {
+						var turtleDiv = $('#turtleTemplate').children().first().clone();
+						turtleDiv.find('.turtle_name').text(response[i].name);
+						turtleDiv.find('.turtle_weapon').text(response[i].weapon);
+						turtleDiv.css({color: response[i].color});
+						turtleDiv.find('.turtle_pizza').attr('data_turtleId', response[i]._id);
+						turtleDiv.find('.turtle_name').attr('data_turtleId',response[i]._id);
+						// turtleDiv.find(".turtle_link").attr("href",'/details' + response[i]._id);
+						turtleDiv.find('.pizza_count').html(response[i].pizza);
+						turtleDiv.find(".turtle_pizza").click(buyPizza(response[i]._id));
+						turtleDiv.find('.delete_turtle').click(deleteTurtle(response[i]._id));
+// appending the clone into the DOM!
+						$('#output').append(turtleDiv);
+					}
+				},
+				error: function(err) {
+// On an error (unable to get the turtles), show the login form
+					$('.login-form').show();
+				}
+			});
+		}
+
+function buyPizza (turtleId){
+	return function(){
+		$.post("/api/pizza_count",
+		{
+			_id: turtleId
+		},
+		function(response)
+		{
+			getTurtles();
+		});
+	};
+}
+
+function deleteTurtle(turtleId){
+	return function(){
+		$.post('/api/deleteTurtle',
+		{
+			_id: turtleId
+		},
+		function(response)
+		{
+			getTurtles();
+		});
+	};
+}
+
+/*
+	Click listener for adding a new turtle
+*/
+		$('#newTurtleSubmit').click(function() {
+			// post the turtle
+			// todo: add some validation here
+			$.post('/api/newTurtle', {
+				name: $('#newTurtleName').val(),
+				color: $('#newTurtleColor').val(),
+				weapon: $('#newTurtleWeapon').val(),
+			}, function() {
+// on success, clear out the existing turtle inputs
+				$('#newTurtleName').val('');
+				$('#newTurtleColor').val('');
+				$('#newTurtleWeapon').val('');
+// and re-build the turtles div from the database
+				getTurtles();
+			});
+		});
+
+// get the turtles on page load
+		$(document).ready(function() {
+			getTurtles();
+		});
+
+/*
+	Click listener for the login button
+*/
+		$('#login').click(function() {
+			// post to the login api
+			$.post('/api/login', {
+				username: $('#username').val(),
+				password: $('#password').val()
+			}, function(res) {
+				// If we haven't logged in, display an error
+				if (res === "error") {
+					$('#login-error').text('Error: Username or password incorrect.');
+				} else {
+					// Otherwise, hide the login form and get the turtles
+					$('.login-form').hide();
+					getTurtles();
+				}
+			});
+		});
+/*
+	Click listener for registering a user
+*/
+		$('#register').click(function() {
+			// todo: add validation
+			$.post('/api/register', {
+				username: $('#username').val(),
+				password: $('#password').val()
+			}, function(res) {
+// Display the result to the user
+				if (res === "error") {
+					$('#login-error').text('Error: Could not register user.');
+				} else {
+					$('#login-error').text('Registered! Try logging in...');
+				}
+			});
+		});
+
+	</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

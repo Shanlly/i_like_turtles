@@ -1,0 +1,22 @@
+<<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>detatils</title>
+		" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+	</head>
+<body>
+	<div id="output"></div>
+	<script>
+		// When this page loads, get the turtle id from the url
+		turtleId = document.location.pathname.split('/')[2];
+		$.get('/api/turtle/' + turtleId, function(response) {
+			$('#output').text(JSON.stringify(response));
+		});
+
+	</script>
+
+</body>
+</html>
